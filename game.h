@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include "gamelogic.h"
 #include "render.h"
 
@@ -10,18 +10,6 @@ class Game
 	GamePhase gamePhase = GamePhase::Placing;
     uint8_t playerStep = 0;
 
-    void Loop()
-    {
-        int c = 0;
-        while (true) {
-            c = getch()
-            
-
-
-            if ()
-            if (gamePhase == GamePhase::Placing) {
-                playerAreas[playerStep]
-            }
-        };
-    }
+    void Loop();
+    void RenderGameArea(GameArea gameArea, bool hide);
 };

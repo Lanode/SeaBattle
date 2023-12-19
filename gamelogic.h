@@ -1,7 +1,8 @@
 #include <vector>
-#include <list>
 #include <compare>
 #include <map>
+
+const Vector GAME_FIELD_SIZE {10, 10};
 
 enum ShipType { One, Two, Three, Four };
 enum CellType { None, Ship, ShipArea, Miss, Hit };
@@ -29,21 +30,24 @@ class GameArea
 {
 private:
 	std::map<Vector, CellType> cells;
-
-public:
-	std::map<ShipType, int> shipsNotOnField = {
+	std::map<ShipType, int> dockedShips = {
 		{One,   4},
 		{Two,   3},
 		{Three, 2},
 		{Four,  1}
 	};
+	int totalShipCount = 0;
+
+public:
+	GameArea();
 
 	CellType GetCell(Vector p);
 	void SetCell(Vector p, CellType type);
 
 	std::vector<Vector> GetShipCells(Vector p);
 	std::vector<Vector> GetShipAreaCells(Vector p);
-	bool AllShipsInDocks();
+	int GetDockedShipsCount();
+	int GetTotalShipCount();
 
 	PlaceResult PlaceShip(Vector coords, Vector orientation, ShipType type);
 	HitResult HitShip(Vector p);
