@@ -52,12 +52,3 @@ public:
 	PlaceResult PlaceShip(Vector coords, Vector orientation, ShipType type);
 	HitResult HitShip(Vector p);
 };
-
-class GameLogic
-{
-	GameArea player1Area;
-	GameArea player2Area;
-	GamePhase gamePhase = GamePhase::Placing;
-	
-	
-};

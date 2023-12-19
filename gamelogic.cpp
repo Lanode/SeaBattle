@@ -32,7 +32,7 @@ GameArea::GameArea()
 
 CellType GameArea::GetCell(Vector p)
 {
-	if (cells.contains(p))
+	if (std::find(cells.begin(), cells.end(), p) != cells.end())
 		return cells.at(p);
 	else
 		return CellType::None;

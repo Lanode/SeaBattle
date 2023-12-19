@@ -10,6 +10,8 @@ class Game
 	GamePhase gamePhase = GamePhase::Placing;
     uint8_t playerStep = 0;
 
-    void Loop();
     void RenderGameArea(GameArea gameArea, bool hide);
+
+public:
+    void Loop();
 };
