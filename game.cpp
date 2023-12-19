@@ -16,26 +16,24 @@ void Game::Loop()
     bool continue_step = false;
     while (true) {
         continue_step = false;
-        if (gamePhase == GamePhase::Placing) {
+        if (gamePhase == GamePhase::gpPlacing) {
+            GameArea gameArea = playerAreas[playerStep];
+            RenderGameArea(gameArea, false);
             std::string coord_inp, direction_inp, type_inp;
             int ship_type;
 
-            std::cout << "> ";
+            std::cout << playerStep << "> ";
             std::cin >> coord_inp >> direction_inp >> ship_type;
 
-            Vector coord = {coord_inp[0] - 'a', coord_inp[0] - '0'};
+            Vector coord = {coord_inp[0] - 'a', coord_inp[1] - '0'};
+            std::cout << coord.x << " " << coord.y << std::endl;
             
-            GameArea gameArea = playerAreas[playerStep];
             PlaceResult res = gameArea.PlaceShip(coord, directions[direction_inp], (ShipType)(ship_type-1));
-            switch (res)
-            {
-            case PlaceResult::Forbidden:
+            if (res == PlaceResult::prForbidden || res == PlaceResult::prAlreadyPlaced) {
                 std::cout << "нельзя так размещать" << std::endl;
                 continue_step = true;
-                break;
-            
-            default:
-                break;
+            } else if (res == PlaceResult::prPlaced) {
+                std::cout << "размещено" << std::endl;
             }
 
             int allPlacedPlayerCount = 0;
@@ -44,16 +42,16 @@ void Game::Loop()
                     allPlacedPlayerCount++;
             }
             if (allPlacedPlayerCount == 2) {
-                gamePhase = GamePhase::Hitting;
+                gamePhase = GamePhase::gpHitting;
                 std::cout << "==== РЕЖИМ ПОДБИТИЯ ====" << std::endl;
                 std::cout << "подбейте корабль (координата) (a4)" << std::endl;
             }
         }
-        if (gamePhase == GamePhase::Hitting) {
+        if (gamePhase == GamePhase::gpHitting) {
             std::string coord_inp;
-            std::cout << "> ";
+            std::cout << playerStep << "> ";
             std::cin >> coord_inp;
-            Vector coord = {coord_inp[0] - 'a', coord_inp[0] - '0'};
+            Vector coord = {coord_inp[0] - 'a', coord_inp[1] - '0'};
             GameArea gameArea;
             if (playerStep == 0) {
                 gameArea = playerAreas[1];
@@ -64,17 +62,17 @@ void Game::Loop()
             HitResult res = gameArea.HitShip(coord);
             switch (res)
             {
-            case HitResult::Missed:
+            case HitResult::hrMissed:
                 std::cout << "промах" << std::endl;
                 break;
-            case HitResult::Forbidden:
+            case HitResult::hrForbidden:
                 std::cout << "уже стрелял сюда попробуй другое место" << std::endl;
                 break;
-            case HitResult::Struck:
+            case HitResult::hrStruck:
                 std::cout << "попал" << std::endl;
                 continue_step = true;
                 break;
-            case HitResult::Sinked:
+            case HitResult::hrSinked:
                 continue_step = true;
                 std::cout << "затопил" << std::endl;
                 break;
@@ -94,28 +92,20 @@ void Game::Loop()
 
 void Game::RenderGameArea(GameArea gameArea, bool hide)
 {
-    for (int x=0; x < 10; x++)
+    for (int x=0; x < 10; x++) {
         for (int y=0; y < 10; y++) {
             CellType cell = gameArea.GetCell({x, y});
-            switch (cell)
-            {
-            case CellType::None:
-                std::cout << "0 ";
-                break;
+            std::cout << (int)cell << " ";
+            // if (cell == CellType::ctNone || cell == CellType::ctShipArea)
+            //     std::cout << "0 ";
+            // if (cell == CellType::ctMiss)
+            //     std::cout << "M ";
+            // if (cell == CellType::ctHit)
+            //     std::cout << "X ";
+            // if (cell == CellType::ctShip)
+            //     std::cout << "S ";
             
-            case CellType::Miss:
-                std::cout << "M ";
-                break;
-
-            case CellType::Hit:
-                std::cout << "X ";
-                break;
-
-            case CellType::Ship:
-                if (!hide)
-                    std::cout << "S ";
-                break;
-            }
-            std::cout << std::endl;
         }
+        std::cout << std::endl;
+    }
 }

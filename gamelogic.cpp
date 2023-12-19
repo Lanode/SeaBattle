@@ -1,5 +1,7 @@
 #include "gamelogic.h"
 #include <cmath>
+#include <algorithm>
+#include <iostream>
 
 Vector Vector::operator+(Vector a)
 {
@@ -32,10 +34,10 @@ GameArea::GameArea()
 
 CellType GameArea::GetCell(Vector p)
 {
-	if (std::find(cells.begin(), cells.end(), p) != cells.end())
+	if (cells.contains(p))
 		return cells.at(p);
 	else
-		return CellType::None;
+		return CellType::ctNone;
 }
 
 void GameArea::SetCell(Vector p, CellType type)
@@ -50,7 +52,7 @@ std::vector<Vector> GameArea::GetShipCells(Vector p)
 	Vector rot;
 	for (int d=0; d<=180; d+=90) {
 		Vector near_coords = p.Rotate(d);
-		if (GetCell(near_coords) == Ship) {
+		if (GetCell(near_coords) == ctShip) {
 			rot = near_coords;
 			break;
 		}
@@ -75,7 +77,7 @@ std::vector<Vector> GameArea::GetShipAreaCells(Vector p)
 	for (Vector p : shipCells) {
 		for (int d=0; d<=180; d+=90) {
 			Vector near_coord = p.Rotate(d);
-			if (GetCell(near_coord) != Ship) {
+			if (GetCell(near_coord) != ctShip) {
 				shipAreaCells.push_back(near_coord);
 			}
 		}
@@ -100,46 +102,48 @@ int GameArea::GetTotalShipCount()
 PlaceResult GameArea::PlaceShip(Vector coords, Vector orientation, ShipType type)
 {
 	if (dockedShips[type] <= 0) 
-		return PlaceResult::AlreadyPlaced;
+		return PlaceResult::prAlreadyPlaced;
 
 	for (int i = 0; i < type+1; i++)
 	{
 		Vector next_coord = coords + orientation * i;
 
-		if (GetCell(next_coord) == Ship || GetCell(next_coord) == ShipArea)
-			return PlaceResult::Forbidden;
+		std::cout << next_coord.x << " " << next_coord.y <<std::endl;
+
+		if (GetCell(next_coord) == ctShip || GetCell(next_coord) == ctShipArea)
+			return PlaceResult::prForbidden;
 		else {
-			SetCell(next_coord, Ship);
+			SetCell(next_coord, ctShip);
 			dockedShips[type]--;
 		}
 	}
 
-	return PlaceResult::Placed;
+	return PlaceResult::prPlaced;
 }
 
 HitResult GameArea::HitShip(Vector p)
 {
-	if (GetCell(p) == Ship) {
-		SetCell(p, CellType::Hit);
+	if (GetCell(p) == ctShip) {
+		SetCell(p, CellType::ctHit);
 		
 		std::vector<Vector> shipCells = GetShipCells(p);
 		int struckCellsCount = 0;
 		for (Vector cell : GetShipCells(p))
-			if (GetCell(cell) == CellType::Hit)
+			if (GetCell(cell) == CellType::ctHit)
 				struckCellsCount++;
 
 		if (shipCells.size() <= struckCellsCount) {
 			dockedShips[(ShipType)(shipCells.size()-1)] += 1;
 			auto shipArea = GetShipAreaCells(p);
 			for (Vector p_area : shipArea) {
-				SetCell(p_area, CellType::Hit);
+				SetCell(p_area, CellType::ctHit);
 			}
-			return HitResult::Sinked;
+			return HitResult::hrSinked;
 		} else
-			return HitResult::Struck;
-	} else if ((GetCell(p) == CellType::Miss) || (GetCell(p) == CellType::Hit)) {
-		return HitResult::Forbidden;
+			return HitResult::hrStruck;
+	} else if ((GetCell(p) == CellType::ctMiss) || (GetCell(p) == CellType::ctHit)) {
+		return HitResult::hrForbidden;
 	} else {
-		return HitResult::Missed;
+		return HitResult::hrMissed;
 	}
 }

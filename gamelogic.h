@@ -2,12 +2,10 @@
 #include <compare>
 #include <map>
 
-const Vector GAME_FIELD_SIZE {10, 10};
-
-enum ShipType { One, Two, Three, Four };
-enum CellType { None, Ship, ShipArea, Miss, Hit };
-enum PlaceResult { Placed, Forbidden, AlreadyPlaced };
-enum HitResult { Missed, Forbidden, Struck, Sinked };
+enum ShipType { spOne, spTwo, spThree, spFour };
+enum CellType { ctNone, ctShip, ctShipArea, ctMiss, ctHit };
+enum PlaceResult { prPlaced, prForbidden, prAlreadyPlaced };
+enum HitResult { hrMissed, hrForbidden, hrStruck, hrSinked };
 
 struct Vector 
 {
@@ -21,20 +19,22 @@ struct Vector
 	Vector Rotate(int degrees);
 };
 
-Vector Left = {-1, 0};
-Vector Up = {0, -1};
-Vector Right = {1, 0};
-Vector Down = {0, 1};
+const Vector GAME_FIELD_SIZE {10, 10};
+
+// Vector vecLeft = {-1, 0};
+// Vector vecUp = {0, -1};
+// Vector vecRight = {1, 0};
+// Vector vecDown = {0, 1};
 
 class GameArea
 {
 private:
 	std::map<Vector, CellType> cells;
 	std::map<ShipType, int> dockedShips = {
-		{One,   4},
-		{Two,   3},
-		{Three, 2},
-		{Four,  1}
+		{spOne,   4},
+		{spTwo,   3},
+		{spThree, 2},
+		{spFour,  1}
 	};
 	int totalShipCount = 0;
 

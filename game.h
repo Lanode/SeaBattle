@@ -2,13 +2,13 @@
 #include "gamelogic.h"
 #include "render.h"
 
-enum GamePhase { Placing, Hitting };
+enum GamePhase { gpPlacing, gpHitting };
 
 class Game 
 {
     std::vector<GameArea> playerAreas {GameArea(), GameArea()};
-	GamePhase gamePhase = GamePhase::Placing;
-    uint8_t playerStep = 0;
+	GamePhase gamePhase = GamePhase::gpPlacing;
+    int playerStep = 0;
 
     void RenderGameArea(GameArea gameArea, bool hide);
 
