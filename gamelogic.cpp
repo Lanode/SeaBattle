@@ -77,9 +77,19 @@ std::vector<Vector> GameArea::GetShipAreaCells(Vector p)
     return shipAreaCells;
 }
 
+bool GameArea::AllShipsInDocks()
+{
+	int NOFShipCount = 0;
+	for (auto shipCount : gameArea.shipsNotOnField) {
+		NOFShipCount += shipCount.second;
+	}
+	if (NOFShipCount == 0)
+    return false;
+}
+
 PlaceResult GameArea::PlaceShip(Vector coords, Vector orientation, ShipType type)
 {
-	if (shipsOnField[type] <= 0) 
+	if (shipsNotOnField[type] <= 0) 
 		return PlaceResult::AlreadyPlaced;
 
 	for (int i = 0; i < type+1; i++)
@@ -90,7 +100,7 @@ PlaceResult GameArea::PlaceShip(Vector coords, Vector orientation, ShipType type
 			return PlaceResult::Forbidden;
 		else {
 			SetCell(next_coord, Ship);
-			shipsOnField[type]--;
+			shipsNotOnField[type]--;
 		}
 	}
 
@@ -109,7 +119,11 @@ HitResult GameArea::HitShip(Vector p)
 				struckCellsCount++;
 
 		if (shipCells.size() <= struckCellsCount) {
-			shipsOnField[(ShipType)(shipCells.size()-1)] += 1;
+			shipsNotOnField[(ShipType)(shipCells.size()-1)] += 1;
+			auto shipArea = GetShipAreaCells(p);
+			for (Vector p_area : shipArea) {
+				SetCell(p_area, CellType::Hit);
+			}
 			return HitResult::Sinked;
 		} else
 			return HitResult::Struck;

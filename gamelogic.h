@@ -29,19 +29,21 @@ class GameArea
 {
 private:
 	std::map<Vector, CellType> cells;
-	std::map<ShipType, int> shipsOnField = {
+
+public:
+	std::map<ShipType, int> shipsNotOnField = {
 		{One,   4},
 		{Two,   3},
 		{Three, 2},
 		{Four,  1}
 	};
 
-public:
 	CellType GetCell(Vector p);
 	void SetCell(Vector p, CellType type);
 
 	std::vector<Vector> GetShipCells(Vector p);
 	std::vector<Vector> GetShipAreaCells(Vector p);
+	bool AllShipsInDocks();
 
 	PlaceResult PlaceShip(Vector coords, Vector orientation, ShipType type);
 	HitResult HitShip(Vector p);
