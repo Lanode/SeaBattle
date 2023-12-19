@@ -1,43 +1,57 @@
 #include <vector>
+#include <list>
+#include <compare>
+#include <map>
 
-// Definition
-
-enum Direction { Left, Up, Right, Down };
-enum Type { One, Two, Three, Four };
+enum ShipType { One, Two, Three, Four };
 enum CellType { None, Ship, ShipArea, Miss, Hit };
-//enum PlaceReturn { Forbidden, Hit };
+enum PlaceResult { Placed, Forbidden, AlreadyPlaced };
 enum HitResult { Missed, Forbidden, Struck, Sinked };
 
-struct Coordinate 
+struct Vector 
 {
 	int x;
 	int y;
+
+	auto operator <=> (const Vector&) const = default;
+	bool operator == (Vector a);
+	Vector operator+(Vector a);
+	Vector operator*(int a);
+	Vector Rotate(int degrees);
 };
 
-struct ShipInfo
-{
-	Type type;
-	Coordinate p;
-	Direction direction;
-};
+Vector Left = {-1, 0};
+Vector Up = {0, -1};
+Vector Right = {1, 0};
+Vector Down = {0, 1};
 
-class PlayerSpace
+class GameArea
 {
 private:
-	std::vector<std::vector<CellType>> map;
-	std::vector<ShipInfo> ships;
+	std::map<Vector, CellType> cells;
+	std::map<ShipType, int> shipsOnField = {
+		{One,   4},
+		{Two,   3},
+		{Three, 2},
+		{Four,  1}
+	};
 
 public:
-	Coordinate GetShipNextCoord(ShipInfo ship, int i); // по правильному надо перенести в ShipInfo
+	CellType GetCell(Vector p);
+	void SetCell(Vector p, CellType type);
 
-	void Init();
+	std::vector<Vector> GetShipCells(Vector p);
+	std::vector<Vector> GetShipAreaCells(Vector p);
 
-	bool PlaceShip(ShipInfo ship);
-
-	HitResult HitShip(Coordinate p);
+	PlaceResult PlaceShip(Vector coords, Vector orientation, ShipType type);
+	HitResult HitShip(Vector p);
 };
 
 class GameLogic
 {
-
+	GameArea player1Area;
+	GameArea player2Area;
+	GamePhase gamePhase = GamePhase::Placing;
+	
+	
 };

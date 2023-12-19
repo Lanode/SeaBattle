@@ -1,4 +1,4 @@
 class Render
 {
-
+    void renderGameArea();
 };

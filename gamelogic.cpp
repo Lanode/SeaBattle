@@ -1,54 +1,119 @@
 #include "gamelogic.h"
+#include <cmath>
 
-Coordinate PlayerSpace::GetShipNextCoord(ShipInfo ship, int i) {
-    Coordinate p = ship.p;
-	switch (ship.direction) {
-	case Left:
-		p.x -= i;
-		break;
-	case Up:
-		p.y -= i;
-		break;
-	case Right:
-		p.x += i;
-		break;
-	case Down:
-		p.y += i;
-		break;
+Vector Vector::operator+(Vector a)
+{
+	return {x+a.x, y+a.y};
+}
+
+Vector Vector::operator*(int a)
+{
+	return {x*a, y*a};
+}
+
+bool Vector::operator==(Vector a)
+{
+    return x == a.x && y == a.y;
+}
+
+Vector Vector::Rotate(int degrees)
+{
+    return {
+		(int)(cos(degrees)*x - sin(degrees)*y), 
+		(int)(sin(degrees)*x + cos(degrees)*y)
+	};
+}
+
+CellType GameArea::GetCell(Vector p)
+{
+	if (cells.contains(p))
+		return cells.at(p);
+	else
+		return CellType::None;
+}
+
+void GameArea::SetCell(Vector p, CellType type)
+{
+	cells[p] = type;
+}
+
+std::vector<Vector> GameArea::GetShipCells(Vector p)
+{
+	std::vector<Vector> shipCells;
+
+	Vector rot;
+	for (int d=0; d<=180; d+=90) {
+		Vector near_coords = p.Rotate(d);
+		if (GetCell(near_coords) == Ship) {
+			rot = near_coords;
+			break;
+		}
 	}
-	return ship.p;
+
+	Vector next_coords = p;
+	int i = 0;
+	while (GetCell(next_coords)) {
+		shipCells.push_back(next_coords);
+		next_coords = p + rot * i;
+		i++;
+	}
+
+    return shipCells;
 }
 
-void PlayerSpace::Init()
+std::vector<Vector> GameArea::GetShipAreaCells(Vector p)
 {
-	std::vector<std::vector<CellType>> map2(10, std::vector<CellType>(10));
-	this->map = map2;
+	std::vector<Vector> shipAreaCells;
+
+	std::vector<Vector> shipCells = GetShipCells(p);
+	for (Vector p : shipCells) {
+		for (int d=0; d<=180; d+=90) {
+			Vector near_coord = p.Rotate(d);
+			if (GetCell(near_coord) != Ship) {
+				shipAreaCells.push_back(near_coord);
+			}
+		}
+	}
+    return shipAreaCells;
 }
 
-bool PlayerSpace::PlaceShip(ShipInfo ship)
+PlaceResult GameArea::PlaceShip(Vector coords, Vector orientation, ShipType type)
 {
-	for (int i = 0; i < ship.type; i++)
+	if (shipsOnField[type] <= 0) 
+		return PlaceResult::AlreadyPlaced;
+
+	for (int i = 0; i < type+1; i++)
 	{
-		Coordinate p = GetShipNextCoord(ship, i);
+		Vector next_coord = coords + orientation * i;
 
-		if ((map[p.x][p.y] == Ship) || (map[p.x][p.y] == ShipArea))
-			return false;
-		else
-			map[p.x][p.y] = Ship;
+		if (GetCell(next_coord) == Ship || GetCell(next_coord) == ShipArea)
+			return PlaceResult::Forbidden;
+		else {
+			SetCell(next_coord, Ship);
+			shipsOnField[type]--;
+		}
 	}
 
-	ships.push_back(ship);
-
-	return true;
+	return PlaceResult::Placed;
 }
 
-HitResult PlayerSpace::HitShip(Coordinate p)
+HitResult GameArea::HitShip(Vector p)
 {
-	if (map[p.x][p.y] == Ship) {
-		map[p.x][p.y] = CellType::Hit;
-		// сделать проверку на затопление пройдясь по всем координатам корабля и тогда вернуть Sinked а пока что:
-		return HitResult::Struck;
-	} else if ((map[p.x][p.y] == Miss) || (map[p.x][p.y] == Hit)) {
+	if (GetCell(p) == Ship) {
+		SetCell(p, CellType::Hit);
+		
+		std::vector<Vector> shipCells = GetShipCells(p);
+		int struckCellsCount = 0;
+		for (Vector cell : GetShipCells(p))
+			if (GetCell(cell) == CellType::Hit)
+				struckCellsCount++;
+
+		if (shipCells.size() <= struckCellsCount) {
+			shipsOnField[(ShipType)(shipCells.size()-1)] += 1;
+			return HitResult::Sinked;
+		} else
+			return HitResult::Struck;
+	} else if ((GetCell(p) == CellType::Miss) || (GetCell(p) == CellType::Hit)) {
 		return HitResult::Forbidden;
 	} else {
 		return HitResult::Missed;
