@@ -18,7 +18,7 @@ void Game::Loop()
 
         if (gamePhase == GamePhase::gpPlacing) {
             GameArea* gameArea = playerAreas[playerStep];
-            RenderGameArea(gameArea, false);
+            RenderGameArea(playerStep, gameArea, false);
             std::string coord_inp, direction_inp, type_inp;
             int ship_type;
 
@@ -49,11 +49,9 @@ void Game::Loop()
         }
         if (gamePhase == GamePhase::gpHitting) {
             GameArea* gameArea;
-            if (playerStep == 0)
-                gameArea = playerAreas[1];
-            else
-                gameArea = playerAreas[0];
-            RenderGameArea(gameArea, true);
+            int oppositePlayer = playerStep == 0 ? 1 : 0;
+            gameArea = playerAreas[oppositePlayer];
+            RenderGameArea(oppositePlayer, gameArea, true);
             std::string coord_inp;
             std::cout << playerStep << "> ";
             std::cin >> coord_inp;
@@ -69,6 +67,7 @@ void Game::Loop()
             case HitResult::hrForbidden:
                 std::cout << "уже стрелял сюда попробуй другое место" << std::endl;
                 Sleep(messageShowDelay);
+                continue_step = true;
                 break;
             case HitResult::hrStruck:
                 std::cout << "попал" << std::endl;
@@ -94,7 +93,7 @@ void Game::Loop()
     }
 }
 
-void Game::RenderGameArea(GameArea* gameArea, bool hide)
+void Game::RenderGameArea(int step, GameArea* gameArea, bool hide)
 {
     std::array<std::string, 4> shipTypesNames{"один", "два", "три", "четыре"};
     system("cls");
@@ -105,9 +104,9 @@ void Game::RenderGameArea(GameArea* gameArea, bool hide)
         std::cout << "==== РЕЖИМ ПОДБИТИЯ ====" << std::endl;
         std::cout << "подбейте корабль (координата) (a4)" << std::endl;
     }
-    std::cout << "  a b c d e f g h i j" << std::endl;
+    std::cout << playerStep << " a b c d e f g h i j" << std::endl;
     for (int y=0; y < 10; y++) {
-        std::cout << y << " ";
+        std::cout << y+1 << " ";
         for (int x=0; x < 10; x++) {
             CellType cell = gameArea->GetCell({x, y});
             //std::cout << (int)cell << " ";
