@@ -1,5 +1,6 @@
 #include "game.h"
 #include <array>
+#include <iomanip>
 #include "windows.h"
 
 
@@ -104,20 +105,22 @@ void Game::RenderGameArea(int step, GameArea* gameArea, bool hide)
         std::cout << "==== РЕЖИМ ПОДБИТИЯ ====" << std::endl;
         std::cout << "подбейте корабль (координата) (a4)" << std::endl;
     }
-    std::cout << playerStep << " a b c d e f g h i j" << std::endl;
+    std::cout << step << "  a b c d e f g h i j" << std::endl;
     for (int y=0; y < 10; y++) {
-        std::cout << y+1 << " ";
+        std::cout << std::setw(2) << y+1 << " ";
         for (int x=0; x < 10; x++) {
             CellType cell = gameArea->GetCell({x, y});
-            //std::cout << (int)cell << " ";
-             if (cell == CellType::ctNone || cell == CellType::ctShipArea)
-                 std::cout << ". ";
-             if (cell == CellType::ctMiss)
-                 std::cout << "M ";
-             if (cell == CellType::ctHit)
-                 std::cout << "X ";
-             if (cell == CellType::ctShip)
-                 std::cout << "S ";
+            //std::cout << (int)cell;
+            if (cell == CellType::ctNone || cell == CellType::ctShipArea)
+                std::cout << ". ";
+            if (cell == CellType::ctMiss)
+                std::cout << "M ";
+            if (cell == CellType::ctHit)
+                std::cout << "X ";
+            if (cell == CellType::ctShip)
+                std::cout << "S ";
+            if (cell == CellType::ctSinked)
+                std::cout << "# ";
             
         }
         if (y >= 0 && y < 4)

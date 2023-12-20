@@ -65,7 +65,7 @@ std::set<Vector> GameArea::GetShipCells(Vector p)
 	for (int d=0; d<=360; d+=90) {
 		Vector r = Vector{ -1,0 }.Rotate(d);
 		Vector near_coords = p + r;
-		if (GetCell(near_coords) == ctShip) {
+		if (GetCell(near_coords) == ctShip || GetCell(near_coords) == ctHit) {
 			rot = r;
 			break;
 		}
@@ -73,14 +73,14 @@ std::set<Vector> GameArea::GetShipCells(Vector p)
 
 	Vector next_coords = p;
 	int i = 0;
-	while (GetCell(next_coords) == ctShip) {
+	while (GetCell(next_coords) == ctShip || GetCell(next_coords) == ctHit) {
 		shipCells.insert(next_coords);
 		next_coords = p + rot * i;
 		i++;
 	}
 	next_coords = p;
 	i = 0;
-	while (GetCell(next_coords) == ctShip) {
+	while (GetCell(next_coords) == ctShip || GetCell(next_coords) == ctHit) {
 		shipCells.insert(next_coords);
 		next_coords = p + (-rot) * i;
 		i++;
@@ -98,7 +98,7 @@ std::set<Vector> GameArea::GetShipAreaCells(Vector p)
 		for (int x=-1; x<=1; x++)
 			for (int y = -1; y <= 1; y++) {
 				Vector near_coord = p + Vector{x,y};
-				if (GetCell(near_coord) != ctShip) {
+				if (GetCell(near_coord) != ctShip && GetCell(near_coord) != ctHit) {
 					shipAreaCells.insert(near_coord);
 				}
 			}
@@ -172,14 +172,21 @@ HitResult GameArea::HitShip(Vector p)
 			dockedShips[(ShipType)(shipCells.size()-1)] += 1;
 			auto shipArea = GetShipAreaCells(p);
 			for (Vector p_area : shipArea) {
-				SetCell(p_area, CellType::ctHit);
+				SetCell(p_area, CellType::ctSinked);
+			}
+			auto shipCells = GetShipCells(p);
+			for (Vector p_ship : shipCells) {
+				SetCell(p_ship, CellType::ctSinked);
 			}
 			return HitResult::hrSinked;
 		} else
 			return HitResult::hrStruck;
-	} else if ((GetCell(p) == CellType::ctMiss) || (GetCell(p) == CellType::ctHit)) {
+	} else if (GetCell(p) == CellType::ctMiss || 
+			   GetCell(p) == CellType::ctHit  || 
+		       GetCell(p) == CellType::ctSinked) {
 		return HitResult::hrForbidden;
 	} else {
+		SetCell(p, ctMiss);
 		return HitResult::hrMissed;
 	}
 }

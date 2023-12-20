@@ -4,7 +4,7 @@
 #include <set>
 
 enum ShipType { spOne, spTwo, spThree, spFour };
-enum CellType { ctNone, ctShip, ctShipArea, ctMiss, ctHit };
+enum CellType { ctNone, ctShip, ctShipArea, ctMiss, ctHit, ctSinked };
 enum PlaceResult { prPlaced, prForbidden, prAlreadyPlaced };
 enum HitResult { hrMissed, hrForbidden, hrStruck, hrSinked };
 
