@@ -1,6 +1,7 @@
 #include <vector>
 #include <compare>
 #include <map>
+#include <set>
 
 enum ShipType { spOne, spTwo, spThree, spFour };
 enum CellType { ctNone, ctShip, ctShipArea, ctMiss, ctHit };
@@ -16,15 +17,18 @@ struct Vector
 	bool operator == (Vector a);
 	Vector operator+(Vector a);
 	Vector operator*(int a);
+	Vector operator-();
 	Vector Rotate(int degrees);
 };
 
 const Vector GAME_FIELD_SIZE {10, 10};
 
-// Vector vecLeft = {-1, 0};
-// Vector vecUp = {0, -1};
-// Vector vecRight = {1, 0};
-// Vector vecDown = {0, 1};
+/*
+Vector vecLeft {-1, 0};
+Vector vecUp {0, -1};
+Vector vecRight {1, 0};
+Vector vecDown {0, 1};
+*/
 
 class GameArea
 {
@@ -44,9 +48,10 @@ public:
 	CellType GetCell(Vector p);
 	void SetCell(Vector p, CellType type);
 
-	std::vector<Vector> GetShipCells(Vector p);
-	std::vector<Vector> GetShipAreaCells(Vector p);
+	std::set<Vector> GetShipCells(Vector p);
+	std::set<Vector> GetShipAreaCells(Vector p);
 	int GetDockedShipsCount();
+	int GetDockedShipsCount(ShipType type);
 	int GetTotalShipCount();
 
 	PlaceResult PlaceShip(Vector coords, Vector orientation, ShipType type);

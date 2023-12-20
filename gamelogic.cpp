@@ -1,7 +1,13 @@
 #include "gamelogic.h"
 #include <cmath>
+#include <numbers>
 #include <algorithm>
 #include <iostream>
+
+inline double round_away(double x)
+{
+	return x < 0 ? floor(x) : ceil(x);
+}
 
 Vector Vector::operator+(Vector a)
 {
@@ -13,6 +19,11 @@ Vector Vector::operator*(int a)
 	return {x*a, y*a};
 }
 
+Vector Vector::operator-()
+{
+	return {-x, -y};
+}
+
 bool Vector::operator==(Vector a)
 {
     return x == a.x && y == a.y;
@@ -20,9 +31,10 @@ bool Vector::operator==(Vector a)
 
 Vector Vector::Rotate(int degrees)
 {
+	double rad = degrees * std::numbers::pi / 180;
     return {
-		(int)(cos(degrees)*x - sin(degrees)*y), 
-		(int)(sin(degrees)*x + cos(degrees)*y)
+		(int)(cos(rad)*x - sin(rad)*y),
+		(int)(sin(rad)*x + cos(rad)*y)
 	};
 }
 
@@ -34,53 +46,62 @@ GameArea::GameArea()
 
 CellType GameArea::GetCell(Vector p)
 {
-	if (cells.contains(p))
-		return cells.at(p);
+	if (this->cells.contains(p))
+		return this->cells.at(p);
 	else
 		return CellType::ctNone;
 }
 
 void GameArea::SetCell(Vector p, CellType type)
 {
-	cells[p] = type;
+	this->cells[p] = type;
 }
 
-std::vector<Vector> GameArea::GetShipCells(Vector p)
+std::set<Vector> GameArea::GetShipCells(Vector p)
 {
-	std::vector<Vector> shipCells;
+	std::set<Vector> shipCells;
 
 	Vector rot;
-	for (int d=0; d<=180; d+=90) {
-		Vector near_coords = p.Rotate(d);
+	for (int d=0; d<=360; d+=90) {
+		Vector r = Vector{ -1,0 }.Rotate(d);
+		Vector near_coords = p + r;
 		if (GetCell(near_coords) == ctShip) {
-			rot = near_coords;
+			rot = r;
 			break;
 		}
 	}
 
 	Vector next_coords = p;
 	int i = 0;
-	while (GetCell(next_coords)) {
-		shipCells.push_back(next_coords);
+	while (GetCell(next_coords) == ctShip) {
+		shipCells.insert(next_coords);
 		next_coords = p + rot * i;
+		i++;
+	}
+	next_coords = p;
+	i = 0;
+	while (GetCell(next_coords) == ctShip) {
+		shipCells.insert(next_coords);
+		next_coords = p + (-rot) * i;
 		i++;
 	}
 
     return shipCells;
 }
 
-std::vector<Vector> GameArea::GetShipAreaCells(Vector p)
+std::set<Vector> GameArea::GetShipAreaCells(Vector p)
 {
-	std::vector<Vector> shipAreaCells;
+	std::set<Vector> shipAreaCells;
 
-	std::vector<Vector> shipCells = GetShipCells(p);
+	std::set<Vector> shipCells = GetShipCells(p);
 	for (Vector p : shipCells) {
-		for (int d=0; d<=180; d+=90) {
-			Vector near_coord = p.Rotate(d);
-			if (GetCell(near_coord) != ctShip) {
-				shipAreaCells.push_back(near_coord);
+		for (int x=-1; x<=1; x++)
+			for (int y = -1; y <= 1; y++) {
+				Vector near_coord = p + Vector{x,y};
+				if (GetCell(near_coord) != ctShip) {
+					shipAreaCells.insert(near_coord);
+				}
 			}
-		}
 	}
     return shipAreaCells;
 }
@@ -94,6 +115,11 @@ int GameArea::GetDockedShipsCount()
 	return DockedShipCount;
 }
 
+int GameArea::GetDockedShipsCount(ShipType type)
+{
+	return dockedShips[type];
+}
+
 int GameArea::GetTotalShipCount()
 {
     return totalShipCount;
@@ -104,20 +130,30 @@ PlaceResult GameArea::PlaceShip(Vector coords, Vector orientation, ShipType type
 	if (dockedShips[type] <= 0) 
 		return PlaceResult::prAlreadyPlaced;
 
+	std::set<Vector> shipCells;
 	for (int i = 0; i < type+1; i++)
 	{
 		Vector next_coord = coords + orientation * i;
 
-		std::cout << next_coord.x << " " << next_coord.y <<std::endl;
+		//std::cout << next_coord.x << " " << next_coord.y <<std::endl;
 
 		if (GetCell(next_coord) == ctShip || GetCell(next_coord) == ctShipArea)
 			return PlaceResult::prForbidden;
 		else {
-			SetCell(next_coord, ctShip);
-			dockedShips[type]--;
+			shipCells.insert(next_coord);
 		}
 	}
 
+	for (Vector p : shipCells) {
+		SetCell(p, ctShip);
+	}
+
+	auto shipArea = GetShipAreaCells(coords);
+	for (Vector p : shipArea) {
+		SetCell(p, ctShipArea);
+	}
+
+	dockedShips[type]--;
 	return PlaceResult::prPlaced;
 }
 
@@ -126,7 +162,7 @@ HitResult GameArea::HitShip(Vector p)
 	if (GetCell(p) == ctShip) {
 		SetCell(p, CellType::ctHit);
 		
-		std::vector<Vector> shipCells = GetShipCells(p);
+		std::set<Vector> shipCells = GetShipCells(p);
 		int struckCellsCount = 0;
 		for (Vector cell : GetShipCells(p))
 			if (GetCell(cell) == CellType::ctHit)
