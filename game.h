@@ -12,7 +12,8 @@ class Game
 	GamePhase gamePhase = GamePhase::gpPlacing;
     int playerStep = 0;
 
-    void RenderGameArea(int step, GameArea* gameArea, bool hide);
+    void Render();
+    void RenderGameArea(int playerId, GameArea* gameArea, bool hide);
 
 public:
     void Loop();
